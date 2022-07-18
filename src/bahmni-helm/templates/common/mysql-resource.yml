@@ -28,6 +28,7 @@ spec:
           operator: In
           values:
           - database
+{{ end }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -36,10 +37,10 @@ metadata:
   labels:
     app: mysql
 spec:
-  storageClassName: mysql-storage
+  storageClassName: {{- if eq .Values.isAppliance false }} {{ .Values.rwxStorageClass }} {{ else }} mysql-storage {{ end }}
   accessModes:
   - ReadWriteOnce
   resources:
     requests:
       storage: {{  .Values.apps.mysql.storage.size }}
-{{ end }}{{ end }}{{ end }}{{ end }}
+{{ end }}{{ end }}{{ end }}

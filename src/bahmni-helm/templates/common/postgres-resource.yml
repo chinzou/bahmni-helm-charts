@@ -1,4 +1,4 @@
-{{ if .Values.apps }}{{ if .Values.apps.postgresql }} {{ if .Values.apps.postgresql.enabled }} {{ if .Values.isAppliance }}
+{{ if .Values.apps }}{{ if .Values.apps.postgresql }} {{ if .Values.apps.postgresql.enabled }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -36,10 +36,10 @@ metadata:
   labels:
     app: postgres
 spec:
-  storageClassName: postgres-storage
+  storageClassName: {{- if eq .Values.isAppliance false }} {{ .Values.rwxStorageClass }} {{ else }} postgres-storage {{ end }}
   accessModes:
   - ReadWriteOnce
   resources:
     requests:
       storage: {{  .Values.apps.postgresql.storage.size }}
-{{ end }}{{ end }}{{ end }}{{ end }}
+{{ end }}{{ end }}{{ end }}
