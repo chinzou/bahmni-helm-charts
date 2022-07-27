@@ -1,9 +1,9 @@
 {{ if .Values.apps }}{{ if .Values.apps.backup_services }} {{ if .Values.apps.backup_services.enabled }}
-{{ if .Values.apps }}{{ if .Values.apps.openmrs }} {{ if .Values.apps.openmrs.enabled }}
+
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: openmrs-db-backup
+  name: backup
 spec:
   successfulJobsHistoryLimit: 2
   failedJobsHistoryLimit: 2
@@ -13,6 +13,7 @@ spec:
       template:
         spec:
           containers:
+          {{ if .Values.apps }}{{ if .Values.apps.openmrs }} {{ if .Values.apps.openmrs.enabled }}
           - name: openmrs-db-backup
             image: {{ .Values.apps.backup_services.apps.mysql.image }}
             env:
@@ -41,32 +42,8 @@ spec:
             - name: backup-services-storage
               mountPath: "/opt/backup"
               subPath: "openmrs"
-          restartPolicy: OnFailure
-          {{- with .Values.apps.backup_services.nodeSelector }}
-          nodeSelector:
-            {{- toYaml . | nindent 12 }}
-          {{end}}
-          volumes:
-          - name: backup-services-storage
-            persistentVolumeClaim:
-              claimName: backup-services-pvc
 {{ end }}{{ end }}{{ end }}
 {{ if .Values.apps }}{{ if .Values.apps.odoo }} {{ if .Values.apps.odoo.enabled }}
----
-
-apiVersion: batch/v1beta1
-kind: CronJob
-metadata:
-  name: odoo-db-backup
-spec:
-  successfulJobsHistoryLimit: 2
-  failedJobsHistoryLimit: 2
-  schedule: {{ .Values.apps.backup_services.schedule | quote }}
-  jobTemplate:
-    spec:
-      template:
-        spec:
-          containers:
           - name: odoo-db-backup
             image: {{ .Values.apps.backup_services.apps.postgres.image }}
             env:
@@ -91,38 +68,13 @@ spec:
                   name: odoo-configs
                   key: ODOO_DB_PASSWORD
             imagePullPolicy: IfNotPresent
-
             volumeMounts:
             - mountPath: "/opt/backup"
               name: backup-services-storage
               subPath: "odoo"
-          restartPolicy: OnFailure
-          {{- with .Values.apps.backup_services.nodeSelector }}
-          nodeSelector:
-            {{- toYaml . | nindent 12 }}
-          {{end}}
-          volumes:
-          - name: backup-services-storage
-            persistentVolumeClaim:
-              claimName: backup-services-pvc
 {{ end }}{{ end }}{{ end }}
 
 {{ if .Values.apps }}{{ if .Values.apps.bahmni_filestore }} {{ if .Values.apps.bahmni_filestore.enabled }}
----
-
-apiVersion: batch/v1beta1
-kind: CronJob
-metadata:
-  name: filestore-backup
-spec:
-  successfulJobsHistoryLimit: 2
-  failedJobsHistoryLimit: 2
-  schedule: {{ .Values.apps.backup_services.schedule | quote }}
-  jobTemplate:
-    spec:
-      template:
-        spec:
-          containers:
           - name: filestore-backup
             image: {{ .Values.apps.backup_services.apps.filestore.image }}
             env:
@@ -135,90 +87,7 @@ spec:
               subPath: "filestore"
             - name: data
               mountPath: "/opt/data/"
-          restartPolicy: OnFailure
-          {{- with .Values.apps.backup_services.nodeSelector }}
-          nodeSelector:
-            {{- toYaml . | nindent 12 }}
-          {{end}}
-          volumes:
-          - name: backup-services-storage
-            persistentVolumeClaim:
-              claimName: backup-services-pvc
-          - name: data
-            persistentVolumeClaim:
-                claimName: data-pvc
 {{ end }}{{ end }}{{ end }}
-{{ if .Values.apps }}{{ if .Values.apps.metabase }} {{ if .Values.apps.metabase.enabled }}
----
-
-apiVersion: batch/v1beta1
-kind: CronJob
-metadata:
-  name: metabase-db-backup
-spec:
-  successfulJobsHistoryLimit: 2
-  failedJobsHistoryLimit: 2
-  schedule: {{ .Values.apps.backup_services.schedule | quote }}
-  jobTemplate:
-    spec:
-      template:
-        spec:
-          containers:
-          - name: metabase-db-backup
-            image: {{ .Values.apps.backup_services.apps.postgres.image }}
-            env:
-            - name: DB_HOST
-              valueFrom:
-                configMapKeyRef:
-                  name: postgres-configs
-                  key: POSTGRES_HOST
-            - name: DB_NAME
-              valueFrom:
-                configMapKeyRef:
-                  name: metabase-configs
-                  key: METABASE_DB_NAME
-            - name: DB_USERNAME
-              valueFrom:
-                configMapKeyRef:
-                  name: metabase-configs
-                  key: METABASE_DB_USER
-            - name: DB_PASSWORD
-              valueFrom:
-                configMapKeyRef:
-                  name: metabase-configs
-                  key: METABASE_DB_PASSWORD
-            imagePullPolicy: IfNotPresent
-
-            volumeMounts:
-            - mountPath: "/opt/backup"
-              name: backup-services-storage
-              subPath: "metabase"
-          restartPolicy: OnFailure
-          {{- with .Values.apps.backup_services.nodeSelector }}
-          nodeSelector:
-            {{- toYaml . | nindent 12 }}
-          {{end}}
-          volumes:
-          - name: backup-services-storage
-            persistentVolumeClaim:
-              claimName: backup-services-pvc
-{{ end }}{{ end }}{{ end }}
-{{ if .Values.apps }}{{ if .Values.apps.openelis }} {{ if .Values.apps.openelis.enabled }}
----
-
-apiVersion: batch/v1beta1
-kind: CronJob
-metadata:
-  name: openelis-db-backup
-spec:
-  successfulJobsHistoryLimit: 2
-  failedJobsHistoryLimit: 2
-  schedule: {{ .Values.apps.backup_services.schedule | quote }}
-  jobTemplate:
-    spec:
-      template:
-        spec:
-          containers:
           - name: openelis-db-backup
             image: {{ .Values.apps.backup_services.apps.postgres.image }}
             env:
@@ -248,6 +117,39 @@ spec:
             - mountPath: "/opt/backup"
               name: backup-services-storage
               subPath: "openelis"
+
+{{ end }}{{ end }}{{ end }}
+{{ if .Values.apps }}{{ if .Values.apps.metabase }} {{ if .Values.apps.metabase.enabled }}
+          - name: metabase-db-backup
+            image: {{ .Values.apps.backup_services.apps.postgres.image }}
+            env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-configs
+                  key: POSTGRES_HOST
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: metabase-configs
+                  key: METABASE_DB_NAME
+            - name: DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: metabase-configs
+                  key: METABASE_DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: metabase-configs
+                  key: METABASE_DB_PASSWORD
+            imagePullPolicy: IfNotPresent
+
+            volumeMounts:
+            - mountPath: "/opt/backup"
+              name: backup-services-storage
+              subPath: "metabase"
+{{ end }}{{ end }}{{ end }}
           restartPolicy: OnFailure
           {{- with .Values.apps.backup_services.nodeSelector }}
           nodeSelector:
@@ -257,5 +159,4 @@ spec:
           - name: backup-services-storage
             persistentVolumeClaim:
               claimName: backup-services-pvc
-{{ end }}{{ end }}{{ end }}
 {{ end }}{{ end }}{{ end }}
