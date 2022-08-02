@@ -56,7 +56,7 @@ Create nfs and data folders
 
 In case you need to override chart values
 
- ```cp custom-values.yaml.example to custom-values.yaml``` and use ```helm template -f custom-values.yaml haiti bahmni-helm --output-dir haiti-distro``` 
+ ```cp custom-values.yaml.example custom-values.yaml``` and use ```helm template -f custom-values.yaml haiti bahmni-helm --output-dir haiti-distro``` 
 
 
 ```cd ./haiti-distro/bahmni-helm/templates```

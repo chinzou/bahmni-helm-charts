@@ -6,6 +6,7 @@ mysqlLocalPath: /mnt/disks/ssd1/data/mysql
 databaseHostRole: database
 docker_registry: docker.io
 apps:
+  namespace: default
   updatebox:
     image: mdlh/alpine-rsync:3.11-3.1-1
   appointments:

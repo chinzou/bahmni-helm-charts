@@ -5,6 +5,7 @@ metadata:
   name: appointments
   labels:
     app: appointments
+  namespace: {{ .Values.apps.namespace }}
 spec:
   selector:
     app: appointments

@@ -1,9 +1,9 @@
 {{ if .Values.apps }}{{ if .Values.apps.backup_services }} {{ if .Values.apps.backup_services.enabled }}
-
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   name: backup
+  namespace: {{ .Values.apps.namespace }}
 spec:
   successfulJobsHistoryLimit: 2
   failedJobsHistoryLimit: 2
@@ -12,6 +12,16 @@ spec:
     spec:
       template:
         spec:
+          initContainers:
+          - name: prepare_backup_folder
+            image: {{ .Values.apps.backup_services.apps.init_image }}
+            volumeMounts:
+            - name: backup-services-storage
+              mountPath: "/opt/backup"
+            command: ['sh', '-c', "bash /mnt/create_backup_folder.sh"]
+            volumeMounts:
+            - name: create_backup_folder
+              mountPath: "/mnt"
           containers:
           {{ if .Values.apps }}{{ if .Values.apps.openmrs }} {{ if .Values.apps.openmrs.enabled }}
           - name: openmrs-db-backup
@@ -73,7 +83,6 @@ spec:
               name: backup-services-storage
               subPath: "odoo"
 {{ end }}{{ end }}{{ end }}
-
 {{ if .Values.apps }}{{ if .Values.apps.bahmni_filestore }} {{ if .Values.apps.bahmni_filestore.enabled }}
           - name: filestore-backup
             image: {{ .Values.apps.backup_services.apps.filestore.image }}
@@ -88,6 +97,7 @@ spec:
             - name: data
               mountPath: "/opt/data/"
 {{ end }}{{ end }}{{ end }}
+{{ if .Values.apps }}{{ if .Values.apps.openelis }} {{ if .Values.apps.openelis.enabled }}
           - name: openelis-db-backup
             image: {{ .Values.apps.backup_services.apps.postgres.image }}
             env:
@@ -112,12 +122,10 @@ spec:
                   name: openelis-db-config
                   key: OPENELIS_DB_PASSWORD
             imagePullPolicy: IfNotPresent
-
             volumeMounts:
             - mountPath: "/opt/backup"
               name: backup-services-storage
               subPath: "openelis"
-
 {{ end }}{{ end }}{{ end }}
 {{ if .Values.apps }}{{ if .Values.apps.metabase }} {{ if .Values.apps.metabase.enabled }}
           - name: metabase-db-backup
@@ -144,7 +152,6 @@ spec:
                   name: metabase-configs
                   key: METABASE_DB_PASSWORD
             imagePullPolicy: IfNotPresent
-
             volumeMounts:
             - mountPath: "/opt/backup"
               name: backup-services-storage

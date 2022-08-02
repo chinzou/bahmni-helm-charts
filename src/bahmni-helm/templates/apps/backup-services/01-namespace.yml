@@ -1,0 +1,6 @@
+{{ if .Values.apps }}{{ if .Values.apps.backup_services }} {{ if .Values.apps.backup_services.enabled }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: backup
+{{ end }}{{ end }}{{ end }}
