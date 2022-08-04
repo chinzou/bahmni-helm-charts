@@ -15,9 +15,6 @@ spec:
           initContainers:
           - name: prepare_backup_folder
             image: {{ .Values.apps.backup_services.apps.init_image }}
-            volumeMounts:
-            - name: backup-services-storage
-              mountPath: "/opt/backup"
             command: ['sh', '-c', "bash /mnt/create_backup_folder.sh"]
             volumeMounts:
             - name: create_backup_folder
@@ -166,4 +163,7 @@ spec:
           - name: backup-services-storage
             persistentVolumeClaim:
               claimName: backup-services-pvc
+          - name: create_backup_folder
+            configMap:
+              name: create-backup-folder
 {{ end }}{{ end }}{{ end }}
